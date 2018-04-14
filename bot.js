@@ -1,5 +1,7 @@
 const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
+const ms = require("ms")
+const fs = require("fs")
 
 const bot = new Discord.Client();
 
@@ -17,7 +19,54 @@ bot.on("message", async message => {
     let cmd = messageArray[0];
     let args = messageArray.slice(1);
 
+const xp = require("./xp.json");
+
+let xpAdd = Math.floor(Math.random() * 7) +8;
+console.log(xpAdd);
+
+if(!xp[message.author.id]){
+    xp[message.author.id] = {  
+     xp: 0,
+     level: 1
+ };
+}
+
+
+let curxp = xp[message.author.id].xp;
+let curlvl = xp[message.author.id].level;
+let nextLevel = xp[message.author.id].level * 300;
+xp[message.author.id].xp = curxp + xpAdd;
+if(nextLevel <= xp[message.author.id].xp){
+    xp[message.author.id].level = curlvl + 1;
+    let lvlup = new Discord.RichEmbed()
+    .setTitle("Leveled Up!")
+    .setColor("#FEAAF4")
+    .addField("Level: ", curlvl + 1);
+
+    message.channel.send(lvlup).then(msg => {msg.delete(5000)});
+}
+    fs.writeFile("./xp.json", JSON.stringify(xp), (err) => {
+        if(err) console.log(err)
+    });
+
+
+console.log(`level is ${xp[message.author.id].level}`);
     //Commands:
+ // "Levels" Command
+
+if(cmd === `${prefix}levels`){
+    
+     let uicon = message.author.displayAvatarURL
+     let levelEmbed = new Discord.RichEmbed()
+
+     .setTitle(`${message.author.username}`)
+     .setColor("#FEAAF4")
+     .setThumbnail(uicon)
+     .addField("Levels: ", `${xp[message.author.id].level}`)
+     .addField("Xp    : ", `${xp[message.author.id].xp}`)
+     message.channel.send(levelEmbed)
+}
+
  // "SendMsg" Command
  if(cmd === `${prefix}sendmsg`){
     if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
@@ -64,6 +113,9 @@ if(cmd === `${prefix}help`){
     .setColor("#FEAAF4")
     .addField("Prefix", ` ${prefix}  `)
     .addField("(Public Command)report", "report **@User** 'string' ")
+    .addField("(Public Command)serverinfo", "Server Info")
+    .addField("(Public Command)info", "Bot Info ")
+    .addField("(Public Command)helper", "Status")
     .addField("(MANAGE_MESSAGES Permission)kick", "kick **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)ban", "ban **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)tempmute", "tempmute **@User** 'Time' **Example:**`1s OR 1m OR 1h OR 1d` ")
@@ -85,10 +137,11 @@ if(cmd === `${prefix}help`){
         let muterole = message.guild.roles.find(`name`,`muted`);
 
         //Create "Muted" Role
+   
         if(!muterole){
             try{
                muterole = await message.guild.createRole({
-                 name: "Muted",
+                 name: `Muted`,
                  color: "#000000",
                  permission:[]
                 })
@@ -107,6 +160,19 @@ if(cmd === `${prefix}help`){
 
        await(tomute.addRole(muterole.id));
        message.channel.send(`<@${tomute.id}> Has Been Muted For ${ms(ms(mutetime))}`);
+
+       let muteEmbed = new Discord.RichEmbed()
+       .setDescription("Player Muted")
+       .setColor("#FEAAF4")
+       .addField("Muted User", `${tomute} with ID ${tomute.id}`)
+       .addField("Muted By", `<@${message.author.id}> with ID ${message.author.id}`)
+       .addField("Muted For", args[1]);
+
+       let alogs = message.guild.channels.find(`name`,"logs")
+       if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+       alogs.send(muteEmbed)
+
     setTimeout(function(){
       tomute.removeRole(muterole.id)
       message.channel.send(`<@${tomute.id}> Has Been Unmuted `);
@@ -188,7 +254,7 @@ if(cmd === `${prefix}help`){
     if(cmd === `${prefix}helper`){
         return message.channel.send("**Bot: `Online`**");
     }    
-
+ // "Serverinfo" Command
     if(cmd === `${prefix}serverinfo`){
 
         let sicon = message.guild.iconURL
@@ -202,6 +268,7 @@ if(cmd === `${prefix}help`){
     
         return message.channel.send(serverembed)
     }
+    // "Info" Command
     if(cmd === `${prefix}info`){
 
         let bicon = bot.user.displayAvatarURL;
