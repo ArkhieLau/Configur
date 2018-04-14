@@ -58,13 +58,8 @@ if(cmd === `${prefix}checkwarns`){
     let CwUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
      if(!CwUser) return message.channel.send("**Error: **`User Not Found.`");
 
-    let warnsEmbed1 = new Discord.RichEmbed()
-    .setTitle("Check Warns")
-    .setDescription(`User <@${CwUser.id}>`)
-    .setColor("#FEAAF4")
-    .addField("Warns", cwarns[CwUser.id].cwarns);
 
-    message.author.send(warnsEmbed1)
+    message.author.send(`<@${CwUser}> has ${cwarns} warns`)
 }
 if(cmd === `${prefix}warn`){
     let warns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
