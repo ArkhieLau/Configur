@@ -60,7 +60,7 @@ if(cmd === `${prefix}checkwarns`){
     let wlevel = cwarns[CwUser.id].warns;
 
 
-    message.channel.send(`<@${CwUser.id}> has ${cwarns} warns`)
+    message.reply(`<@${CwUser.id}> has ${cwarns} warns`);
 }
 if(cmd === `${prefix}warn`){
     let warns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
