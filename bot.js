@@ -40,7 +40,7 @@ bot.on("message", async message => {
  if(cmd === `${prefix}clear`){
 
     if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
-    if(!args[0]) return message.channel.send("??");
+    if(!args[0]) return message.channel.send("**Error `Clearing Failed`**");
     message.channel.bulkDelete(args[0]).then(() => {
        message.channel.send(`**Cleared ${args[0]} Messages**`).then(msg => msg.delete(5000));
        let clearEmbed = new Discord.RichEmbed()
