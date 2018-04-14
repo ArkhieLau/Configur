@@ -52,6 +52,51 @@ if(nextLevel <= xp[message.author.id].xp){
 
 console.log(`level is ${xp[message.author.id].level}`);
     //Commands:
+ // "Warn" Command
+ let warns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
+if(cmd === `${prefix}checkwarns`){
+    let CwUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+
+    let warnsEmbed1 = new Discord.RichEmbed()
+    .setTitle("Check Warns")
+    .setDescription(`User <@${CwUser.id}>`)
+    .setColor("#FEAAF4")
+    .addField("Warns", warns[CwUser.id].warns);
+
+    message.author.send(warnsEmbed1)
+}
+if(cmd === `${prefix}warn`){
+    if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+    let wUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+    if(!wUser) return message.channel.send("**Error: **`User Not Found`")
+    if(wUser.hasPermission("ADMINISTRATOR")) return message.channel.send("**Error: **`User Cannot Be Warned (got ADMINISTRATOR)`")
+    let wReason = args.join(" ").slice(22)
+
+    if(!warns[wUser.id]) warns[wUser.id] = {
+        warns: 0
+  
+    };
+  warns[wUser.id].warns++;
+ 
+  fs.writeFile("./warnings.json", JSON.stringify(warns), (err) => {
+      if (err) console.log(err);
+  });
+
+   let warnEmbed = new Discord.RichEmbed()
+   .setDescription("Player Warned")
+   .setColor("#FEAAF4")
+   .addField("Warned User", `${wUser} with ID ${wUser.id}`)
+   .addField("Warned By", `<@${message.author.id}> with ID ${message.author.id}`)
+   .addField("Warned In", message.channel)
+   .addField("Warned Reason", wReason)
+   .addField("Warns", warns[wUser.id].warns);
+
+   let alogs = message.guild.channels.find(`name`,"logs")
+   if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+   alogs.send(warnEmbed);
+}
+
  // "Levels" Command
 
 if(cmd === `${prefix}levels`){
@@ -116,12 +161,13 @@ if(cmd === `${prefix}help`){
     .addField("(Public Command)serverinfo", "Server Info")
     .addField("(Public Command)info", "Bot Info ")
     .addField("(Public Command)helper", "Status")
-    .addField("(Public Command)levels", "User Level And Xp")
+    .addField("(Public Command)checkwarns", "checkwarns '@User' view warns ")
     .addField("(MANAGE_MESSAGES Permission)kick", "kick **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)ban", "ban **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)tempmute", "tempmute **@User** 'Time' **Example:**`1s OR 1m OR 1h OR 1d` ")
     .addField("(MANAGE_MESSAGES Permission)sendmsg", "sendmsg 'string' send a message")
-    .addField("(MANAGE_MESSAGES Permission)clear", "clear 'number' clear messages");
+    .addField("(MANAGE_MESSAGES Permission)clear", "clear 'number' clear messages")
+    .addField("(MANAGE_MESSAGES Permission)warn", "warn '@User' 'string'  warn user");
 
     message.author.send("Setup: Create A Channel **logs** and **reports** ")
     message.author.send(helpEmbed)
@@ -134,7 +180,7 @@ if(cmd === `${prefix}help`){
         let tomute = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
         if(!tomute) return message.reply("**Error: **`User Not Found.`");
         if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
-        if(tomute.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Muted`")
+        if(tomute.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Muted (got MANAGE_MESSAGES)`")
         let muterole = message.guild.roles.find(`name`,`muted`);
 
         //Create "Muted" Role
@@ -188,7 +234,7 @@ if(cmd === `${prefix}help`){
         if(!bUser) return message.channel.send("**Error: **`User Not Found.`");
         let bReason = args.join(" ").slice(22);
         if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
-        if(bUser.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Banned, Try Again Later.`");
+        if(bUser.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Banned (got MANAGE_MESSAGES)`");
     
         let banEmbed = new Discord.RichEmbed()
         .setDescription("Ban")
@@ -211,7 +257,7 @@ if(cmd === `${prefix}help`){
         if(!kUser) return message.channel.send("**Error: **`User Not Found.`");
         let kReason = args.join(" ").slice(22);
         if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
-        if(kUser.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Kicked, Try Again Later.`");
+        if(kUser.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Kicked (got MANAGE_MESSAGES)`");
         
         let kickEmbed = new Discord.RichEmbed()
         .setDescription("Kick")
