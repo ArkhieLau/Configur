@@ -57,7 +57,7 @@ if(cmd === `${prefix}checkwarns`){
     let cwarns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
     let CwUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
      if(!CwUser) return message.channel.send("**Error: **`User Not Found.`");
-    let wlevel = cwarns[CwUser.id].warns
+    let wlevel = cwarns[CwUser.id].warns;
 
 
     message.author.send(`<@${CwUser.id}> has ${cwarns} warns`)
