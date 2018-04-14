@@ -116,6 +116,7 @@ if(cmd === `${prefix}help`){
     .addField("(Public Command)serverinfo", "Server Info")
     .addField("(Public Command)info", "Bot Info ")
     .addField("(Public Command)helper", "Status")
+    .addField("(Public Command)levels", "User Level And Xp")
     .addField("(MANAGE_MESSAGES Permission)kick", "kick **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)ban", "ban **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)tempmute", "tempmute **@User** 'Time' **Example:**`1s OR 1m OR 1h OR 1d` ")
