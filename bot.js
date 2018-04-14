@@ -56,6 +56,7 @@ console.log(`level is ${xp[message.author.id].level}`);
 if(cmd === `${prefix}checkwarns`){
     let cwarns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
     let CwUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+     if(!CwUser) return message.channel.send("**Error: **`User Not Found.`");
 
     let warnsEmbed1 = new Discord.RichEmbed()
     .setTitle("Check Warns")
