@@ -53,19 +53,20 @@ if(nextLevel <= xp[message.author.id].xp){
 console.log(`level is ${xp[message.author.id].level}`);
     //Commands:
  // "Warn" Command
- let warns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
 if(cmd === `${prefix}checkwarns`){
+    let cwarns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
     let CwUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
 
     let warnsEmbed1 = new Discord.RichEmbed()
     .setTitle("Check Warns")
     .setDescription(`User <@${CwUser.id}>`)
     .setColor("#FEAAF4")
-    .addField("Warns", warns[CwUser.id].warns);
+    .addField("Warns", cwarns[CwUser.id].cwarns);
 
     message.author.send(warnsEmbed1)
 }
 if(cmd === `${prefix}warn`){
+    let warns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
     if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
     let wUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
     if(!wUser) return message.channel.send("**Error: **`User Not Found`")
@@ -161,7 +162,7 @@ if(cmd === `${prefix}help`){
     .addField("(Public Command)serverinfo", "Server Info")
     .addField("(Public Command)info", "Bot Info ")
     .addField("(Public Command)helper", "Status")
-    .addField("(Public Command)checkwarns", "checkwarns **'@User'** view warns ")
+    .addField("(Public Command)checkwarns", "checkwarns '@User' view warns ")
     .addField("(MANAGE_MESSAGES Permission)kick", "kick **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)ban", "ban **@User** 'string' ")
     .addField("(MANAGE_MESSAGES Permission)tempmute", "tempmute **@User** 'Time' **Example:**`1s OR 1m OR 1h OR 1d` ")
