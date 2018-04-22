@@ -1,136 +1,331 @@
 const botconfig = require("./botconfig.json");
-const tokenfile = require("./token.json");
 const Discord = require("discord.js");
-const fs = require("fs");
+const ms = require("ms")
+const fs = require("fs")
+
 const bot = new Discord.Client();
-bot.commands = new Discord.Collection();
-let coins = require("./coins.json");
-let xp = require("./xp.json");
-let purple = botconfig.purple;
-let cooldown = new Set();
-let cdseconds = 5;
-
-//NDM0NjA5MTU2MjQ3NTE5MjMy.DbNsBA.z-5Psnvemb4nFZXaRk1Dv2YBHs4
-
-fs.readdir("./commands/", (err, files) => {
-
-  if(err) console.log(err);
-  let jsfile = files.filter(f => f.split(".").pop() === "js");
-  if(jsfile.length <= 0){
-    console.log("Couldn't find commands.");
-    return;
-  }
-
-  jsfile.forEach((f, i) =>{
-    let props = require(`./commands/${f}`);
-    console.log(`${f} loaded!`);
-    bot.commands.set(props.help.name, props);
-  });
-});
 
 bot.on("ready", async () => {
-
-  console.log(`${bot.user.username} is online on ${bot.guilds.size} servers!`);
-  bot.user.setActivity("Configur", {type: "WATCHING"});
-
+ console.log(`${bot.user.username} is online!`);
+ bot.user.setActivity("Your Activity", {type: "WATCHING"});
 });
 
-
 bot.on("message", async message => {
+    if(message.author.bot) return;
+    if(message.channel.type === "dm") return;
 
-  if(message.author.bot) return;
-  if(message.channel.type === "dm") return;
+    let prefix = botconfig.prefix;
+    let messageArray = message.content.split(" ");
+    let cmd = messageArray[0];
+    let args = messageArray.slice(1);
 
-  let prefixes = JSON.parse(fs.readFileSync("./prefixes.json", "utf8"));
-  if(!prefixes[message.guild.id]){
-    prefixes[message.guild.id] = {
-      prefixes: botconfig.prefix
-    };
-  }
+const xp = require("./xp.json");
 
-  if(!coins[message.author.id]){
-    coins[message.author.id] = {
-      coins: 0
-    };
-  }
+let xpAdd = Math.floor(Math.random() * 7) +8;
+console.log(xpAdd);
 
-  let coinAmt = Math.floor(Math.random() * 15) + 1;
-  let baseAmt = Math.floor(Math.random() * 15) + 1;
-  console.log(`${coinAmt} ; ${baseAmt}`);
-
-  if(coinAmt === baseAmt){
-    coins[message.author.id] = {
-      coins: coins[message.author.id].coins + coinAmt
-    };
-  fs.writeFile("./coins.json", JSON.stringify(coins), (err) => {
-    if (err) console.log(err)
-  });
-  let coinEmbed = new Discord.RichEmbed()
-  .setAuthor(message.author.username)
-  .setColor("#FEAAF4")
-  .addField("💸", `${coinAmt} Moneys Added!`);
-
-  message.channel.send(coinEmbed).then(msg => {msg.delete(5000)});
-  }
-
-  let xpAdd = Math.floor(Math.random() * 7) + 8;
-  console.log(xpAdd);
-
-  if(!xp[message.author.id]){
-    xp[message.author.id] = {
-      xp: 0,
-      level: 1
-    };
-  }
+if(!xp[message.author.id]){
+    xp[message.author.id] = {  
+     xp: 0,
+     level: 1
+ };
+}
 
 
-  let curxp = xp[message.author.id].xp;
-  let curlvl = xp[message.author.id].level;
-  let nxtLvl = xp[message.author.id].level * 300;
-  let coinscl = curlvl * 10;
-  xp[message.author.id].xp =  curxp + xpAdd;
-  if(nxtLvl <= xp[message.author.id].xp){
+let curxp = xp[message.author.id].xp;
+let curlvl = xp[message.author.id].level;
+let nextLevel = xp[message.author.id].level * 300;
+xp[message.author.id].xp = curxp + xpAdd;
+if(nextLevel <= xp[message.author.id].xp){
     xp[message.author.id].level = curlvl + 1;
     let lvlup = new Discord.RichEmbed()
-    .setTitle("Level Up!")
-    .setColor(purple)
-    .addField("Current Level", curlvl + 1)
-    .addField("Rewards", `${coinscl}`)
-    .addField("Next Level",`Require ${nxtLvl} XPs To Level Up`);
- 
-    coins[message.author.id] = {
-      coins: coins[message.author.id].coins + coinscl
-    };
-  fs.writeFile("./coins.json", JSON.stringify(coins), (err) => {
-    if (err) console.log(err)
-  });
+    .setTitle("Leveled Up!")
+    .setColor("#FEAAF4")
+    .addField("Level: ", curlvl + 1);
+
     message.channel.send(lvlup).then(msg => {msg.delete(5000)});
-  }
-  fs.writeFile("./xp.json", JSON.stringify(xp), (err) => {
-    if(err) console.log(err)
+}
+    fs.writeFile("./xp.json", JSON.stringify(xp), (err) => {
+        if(err) console.log(err)
+    });
+
+
+console.log(`level is ${xp[message.author.id].level}`);
+    //Commands:
+ // "Warn" Command
+if(cmd === `${prefix}checkwarns`){
+    let cwarns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
+    let CwUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+     if(!CwUser) return message.channel.send("**Error: **`User Not Found.`");
+    let wlevel = cwarns[CwUser.id].warns;
+
+
+    message.reply(`<@${CwUser.id}> has ${wlevel} warns`);
+}
+if(cmd === `${prefix}warn`){
+    let warns = JSON.parse(fs.readFileSync("./warnings.json", "utf8"));
+    if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+    let wUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+    if(!wUser) return message.channel.send("**Error: **`User Not Found`")
+    if(wUser.hasPermission("ADMINISTRATOR")) return message.channel.send("**Error: **`User Cannot Be Warned (got ADMINISTRATOR)`")
+    let wReason = args.join(" ").slice(22)
+
+    if(!warns[wUser.id]) warns[wUser.id] = {
+        warns: 0
+  
+    };
+  warns[wUser.id].warns++;
+ 
+  fs.writeFile("./warnings.json", JSON.stringify(warns), (err) => {
+      if (err) console.log(err);
   });
-  let prefix = prefixes[message.guild.id].prefixes;
-  if(!message.content.startsWith(prefix)) return;
-  if(cooldown.has(message.author.id)){
-    message.delete();
-    return message.reply("You have to wait 5 seconds between commands.")
-  }
-  if(!message.member.hasPermission("ADMINISTRATOR")){
-    cooldown.add(message.author.id);
-  }
+
+   let warnEmbed = new Discord.RichEmbed()
+   .setDescription("Player Warned")
+   .setColor("#FEAAF4")
+   .addField("Warned User", `${wUser} with ID ${wUser.id}`)
+   .addField("Warned By", `<@${message.author.id}> with ID ${message.author.id}`)
+   .addField("Warned In", message.channel)
+   .addField("Warned Reason", wReason)
+   .addField("Warns", warns[wUser.id].warns);
+
+   let alogs = message.guild.channels.find(`name`,"logs")
+   if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+   alogs.send(warnEmbed);
+}
+
+ // "Levels" Command
+
+if(cmd === `${prefix}levels`){
+    
+     let uicon = message.author.displayAvatarURL
+     let levelEmbed = new Discord.RichEmbed()
+
+     .setTitle(`${message.author.username}`)
+     .setColor("#FEAAF4")
+     .setThumbnail(uicon)
+     .addField("Levels: ", `${xp[message.author.id].level}`)
+     .addField("Xp    : ", `${xp[message.author.id].xp}`)
+     message.channel.send(levelEmbed)
+}
+
+ // "SendMsg" Command
+ if(cmd === `${prefix}sendmsg`){
+    if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+    let botmessage = args.join(" ");
+    message.delete().catch();
+    message.channel.send(botmessage) 
+    let sendEmbed = new Discord.RichEmbed()
+    .setDescription("Send Message")
+    .setColor("#FEAAF4")
+    .addField("Requested By", `<@${message.author.id}> with ID ${message.author.id}`)
+    .addField("Said ", botmessage)
+    .addField("Messages Sent In", message.channel);
+
+    let alogs = message.guild.channels.find(`name`,"logs")
+    if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+    alogs.send(sendEmbed)
+}
+ // "Clear" Command
+ if(cmd === `${prefix}clear`){
+
+    if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+    if(!args[0]) return message.channel.send("**Error `Clearing Failed`**");
+    message.channel.bulkDelete(args[0]).then(() => {
+       message.channel.send(`**Cleared ${args[0]} Messages**`).then(msg => msg.delete(5000));
+       let clearEmbed = new Discord.RichEmbed()
+       .setDescription("Message Clear")
+       .setColor("#FEAAF4")
+       .addField("Cleared By", `<@${message.author.id}> with ID ${message.author.id}`)
+       .addField("Cleared Messages", `${args[0]}`)
+       .addField("Messages Cleared In", message.channel);
+
+       let alogs = message.guild.channels.find(`name`,"logs")
+       if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+       alogs.send(clearEmbed)
+    });
+ }
+ // "Help" Command
+if(cmd === `${prefix}help`){
+    let helpEmbed = new Discord.RichEmbed()
+    
+    .setDescription("Commands")
+    .setColor("#FEAAF4")
+    .addField("Prefix", ` ${prefix}  `)
+    .addField("(Public Command)report", "report **@User** 'string' ")
+    .addField("(Public Command)serverinfo", "Server Info")
+    .addField("(Public Command)info", "Bot Info ")
+    .addField("(Public Command)helper", "Status")
+    .addField("(Public Command)checkwarns", "checkwarns '@User' view warns ")
+    .addField("(MANAGE_MESSAGES Permission)kick", "kick **@User** 'string' ")
+    .addField("(MANAGE_MESSAGES Permission)ban", "ban **@User** 'string' ")
+    .addField("(MANAGE_MESSAGES Permission)tempmute", "tempmute **@User** 'Time' **Example:**`1s OR 1m OR 1h OR 1d` ")
+    .addField("(MANAGE_MESSAGES Permission)sendmsg", "sendmsg 'string' send a message")
+    .addField("(MANAGE_MESSAGES Permission)clear", "clear 'number' clear messages")
+    .addField("(MANAGE_MESSAGES Permission)warn", "warn '@User' 'string'  warn user");
+
+    message.author.send("Setup: Create A Channel **logs** and **reports** ")
+    message.author.send(helpEmbed)
+    message.delete()
+}
+
+//"Mute" Command
+  if(cmd === `${prefix}tempmute`){
+
+        let tomute = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+        if(!tomute) return message.reply("**Error: **`User Not Found.`");
+        if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+        if(tomute.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Muted (got MANAGE_MESSAGES)`")
+        let muterole = message.guild.roles.find(`name`,`muted`);
+
+        //Create "Muted" Role
+   
+        if(!muterole){
+            try{
+               muterole = await message.guild.createRole({
+                 name: `Muted`,
+                 color: "#000000",
+                 permission:[]
+                })
+            message.guild.channels.forEach(async (channel, id)=> {
+                await channel.overwritePermissions(muterole, {
+                 SEND_MESSAGES: false,
+                 ADD_REACTIONS: false
+                });
+            });
+            }catch(e){
+                console.log(e.stack);
+            }
+        }
+       let mutetime = args[1];
+       if (!mutetime) return message.channel.send("**Error: **`Bad Usage: '/tempmute' @User#???? time`");
+
+       await(tomute.addRole(muterole.id));
+       message.channel.send(`<@${tomute.id}> Has Been Muted For ${ms(ms(mutetime))}`);
+
+       let muteEmbed = new Discord.RichEmbed()
+       .setDescription("Player Muted")
+       .setColor("#FEAAF4")
+       .addField("Muted User", `${tomute} with ID ${tomute.id}`)
+       .addField("Muted By", `<@${message.author.id}> with ID ${message.author.id}`)
+       .addField("Muted For", args[1]);
+
+       let alogs = message.guild.channels.find(`name`,"logs")
+       if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+       alogs.send(muteEmbed)
+
+    setTimeout(function(){
+      tomute.removeRole(muterole.id)
+      message.channel.send(`<@${tomute.id}> Has Been Unmuted `);
+    }, ms(mutetime));
+       
+    }
+  //End Of "Muted" Role
+
+  //"Ban" Command
+    if(cmd === `${prefix}ban`){
+        let bUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+        if(!bUser) return message.channel.send("**Error: **`User Not Found.`");
+        let bReason = args.join(" ").slice(22);
+        if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+        if(bUser.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Banned (got MANAGE_MESSAGES)`");
+    
+        let banEmbed = new Discord.RichEmbed()
+        .setDescription("Ban")
+        .setColor("#FEAAF4")
+        .addField("Banned User", `${bUser} with ID ${bUser.id}`)
+        .addField("Banned By", `<@${message.author.id}> with ID ${message.author.id}`)
+        .addField("Banned In", message.channel)
+        .addField("Reason", bReason);
+
+        let alogs = message.guild.channels.find(`name`,"logs")
+        if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Logs.`");
+
+        message.guild.member(bUser).ban(bReason);
+        alogs.send(banEmbed);
+
+    }
+ //"Kick" Command
+    if(cmd === `${prefix}kick`){
+        let kUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+        if(!kUser) return message.channel.send("**Error: **`User Not Found.`");
+        let kReason = args.join(" ").slice(22);
+        if(!message.member.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`You Need MANAGE_MESSAGES Permission To Use This Command");
+        if(kUser.hasPermission("MANAGE_MESSAGES")) return message.channel.send("**Error: **`User Cannot Be Kicked (got MANAGE_MESSAGES)`");
+        
+        let kickEmbed = new Discord.RichEmbed()
+        .setDescription("Kick")
+        .setColor("#FEAAF4")
+        .addField("Kicked User", `${kUser} with ID ${kUser.id}`)
+        .addField("Kicked By", `<@${message.author.id}> with ID ${message.author.id}`)
+        .addField("Kicked In", message.channel)
+        .addField("Reason", kReason);
+
+        let alogs = message.guild.channels.find(`name`,"logs")
+        if(!alogs) return message.channel.send("**Error: ** `Couldn't Find Channel For Kicked Players.`");
+        message.guild.member(kUser).kick(kReason)
+        alogs.send(kickEmbed)
+
+    }
+
+//"Report" Command
+    if(cmd === `${prefix}report`){
+
+        let rUser = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
+        if(!rUser) return message.channel.send("User Not Found.");
+        let reason = args.join(" ").slice(22);
+
+        let reportEmbed = new Discord.RichEmbed()
+        .setDescription("Reports")
+        .setColor("#FEAAF4")
+        .addField("Reported Users", `${rUser} with ID: ${rUser.id}`)
+        .addField("Reporter", `${message.author} with ID ${message.author.id}`)
+        .addField("Reported In", message.channel)
+        .addField("Report Reason", reason);
+
+        let reportschannel = message.guild.channels.find(`name`,"reports")
+        if(!reportschannel) return message.channel.send("**Error: ** `Couldn't Find Channel For Reports.`");
 
 
-  let messageArray = message.content.split(" ");
-  let cmd = messageArray[0];
-  let args = messageArray.slice(1);
+        message.delete().catch(O_o=>{});
+        reportschannel.send(reportEmbed)
+        return;
+    }
+//"Helper" Command
+    if(cmd === `${prefix}helper`){
+        return message.channel.send("**Bot: `Online`**");
+    }    
+ // "Serverinfo" Command
+    if(cmd === `${prefix}serverinfo`){
 
-  let commandfile = bot.commands.get(cmd.slice(prefix.length));
-  if(commandfile) commandfile.run(bot,message,args);
+        let sicon = message.guild.iconURL
+        let serverembed = new Discord.RichEmbed()
+        .setDescription("Server Information")
+        .setColor("#FEAAF4")
+        .setThumbnail(sicon)
+        .addField("Server Name", message.guild.name)
+        .addField("Server Owner", message.guild.owner)
+        .addField("Total Members",  message.guild.memberCount)
+    
+        return message.channel.send(serverembed)
+    }
+    // "Info" Command
+    if(cmd === `${prefix}info`){
 
-  setTimeout(() => {
-    cooldown.delete(message.author.id)
-  }, cdseconds * 1000)
+        let bicon = bot.user.displayAvatarURL;
+        let botembed = new Discord.RichEmbed()
 
+        .setDescription("Configur Information")
+        .setColor("#FEAAF4")
+        .setThumbnail(bicon)
+        .addField("Configur Helper", "Discord Server Administrator Tool")
+        .addField("Bot Created By: ", "Arkhie#8479");      
+        return message.channel.send(botembed);
+    }
 });
 
 bot.login(process.env.BOT_TOKEN);
